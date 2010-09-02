@@ -12,8 +12,10 @@ namespace SqlPatch
 
         public static void Main(string[] args)
         {
-            try {
-                if (!ParseCommandLineArgs(args)) {
+            try
+            {
+                if (!ParseCommandLineArgs(args))
+                {
                     OutputHelpMessage();
                     return;
                 }
@@ -22,7 +24,7 @@ namespace SqlPatch
                 Logger.WriteLine("Loading script files...");
                 Logger.Indent();
                 var fileLoader = new FileLoader(Configuration.World.ScriptsDirectoryPath);
-                fileLoader.LoadAllFiles();
+                fileLoader.LoadAllFiles(Configuration.World.LoadDataScripts);
                 Logger.Unindent();
                 Logger.WriteLine(fileLoader.Files.Count + " scripts loaded.\n");
 
@@ -36,19 +38,28 @@ namespace SqlPatch
                 Logger.Indent();
                 var changedDatabaseObjects = new List<ScriptFile>();
                 var appliedScripts = SchemaHelpers.GetScripts();
-                foreach (var script in appliedScripts) {
-                    if (fileLoader.Files.ContainsKey(script.Id)) {
+                foreach (var script in appliedScripts)
+                {
+                    if (fileLoader.Files.ContainsKey(script.Id))
+                    {
                         var file = fileLoader.Files[script.Id];
-                        if (!file.Matches(script)) {
-                            if (file.Type == ScriptType.ChangeScript) {
-                                Logger.WriteLine(string.Format("WARNING! The script {0} has changed since it was applied on {1}.", file.FileName, script.Applied.Date.ToShortDateString()));
-                                if (!Configuration.World.Unattended) {
+                        if (!file.Matches(script))
+                        {
+                            if (file.Type == ScriptType.ChangeScript)
+                            {
+                                Logger.WriteLine(
+                                    string.Format("WARNING! The script {0} has changed since it was applied on {1}.",
+                                                  file.FileName, script.Applied.Date.ToShortDateString()));
+                                if (!Configuration.World.Unattended)
+                                {
                                     Console.WriteLine("\nTo continue, type YES at the prompt: ");
                                     if (Console.ReadLine() != "YES")
                                         Abort("User aborted due to a script file changing that was already applied.");
                                     Console.WriteLine();
                                 }
-                            } else {
+                            }
+                            else
+                            {
                                 changedDatabaseObjects.Add(file);
                             }
                         }
@@ -59,7 +70,8 @@ namespace SqlPatch
 
                 var applied = new HashSet<Guid>(appliedScripts.Select(x => x.Id));
                 var scripts = new List<ScriptFile>();
-                foreach (var script in fileLoader.Files) {
+                foreach (var script in fileLoader.Files)
+                {
                     if (!applied.Contains(script.Key))
                         scripts.Add(script.Value);
                 }
@@ -73,14 +85,17 @@ namespace SqlPatch
                     engine.DontExecute();
                 Logger.Unindent();
                 Logger.WriteLine("Process Complete.");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Logger.WriteLine("THERE WAS AN ERROR!");
                 Logger.WriteLine(string.Empty);
                 Logger.WriteLine(e.Message);
                 Logger.WriteLine(string.Empty);
                 Logger.WriteLine(e.StackTrace);
                 var innerExcepton = e.InnerException;
-                while (innerExcepton != null) {
+                while (innerExcepton != null)
+                {
                     Logger.WriteLine(string.Empty);
                     Logger.WriteLine(innerExcepton.Message);
                     Logger.WriteLine(string.Empty);
@@ -110,6 +125,7 @@ namespace SqlPatch
             output.AppendLine("-p  PASSWORD\tSQL Server Login Password");
             output.AppendLine("-a  \t\tUnattended process (useful for integration environments)");
             output.AppendLine("-f  \t\tActually runs the script.");
+            output.AppendLine("-dt  \t\tRun the Data scripts.");
             output.AppendLine();
             output.AppendLine("EXAMPLES:");
             output.AppendLine(@"SqlPatch.exe -m Scripts -s .\SQLEXPRESS -d Northwind -i");
@@ -167,6 +183,12 @@ namespace SqlPatch
                     if (lastArg)
                         return false;
                     Configuration.World.Apply = true;
+                }
+                else if (argument.Equals("-dt", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (lastArg)
+                        return false;
+                    Configuration.World.LoadDataScripts = true;
                 }
             }
             return Configuration.World.IsValid;

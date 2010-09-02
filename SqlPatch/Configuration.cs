@@ -30,7 +30,7 @@ namespace SqlPatch
         public string Username { get; set; }
         public string Password { get; set; }
         public bool Apply { get; set; }
-
+        public bool LoadDataScripts { get; set; }
         public string ScriptsDirectoryPath { get; set; }
         public bool Unattended { get; set; }
 
@@ -45,6 +45,8 @@ namespace SqlPatch
                                                !string.IsNullOrEmpty(Password)));
             }
         }
+
+        
 
         public override string ToString()
         {

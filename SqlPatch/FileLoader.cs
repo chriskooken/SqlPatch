@@ -15,10 +15,24 @@ namespace SqlPatch {
 
         public Dictionary<Guid, ScriptFile> Files { get; private set; }
 
-        public void LoadAllFiles() {
+        public void LoadAllFiles(bool loadDataScripts) {
             LoadChangeScripts();
             LoadDatabaseObjects("views\\");
             LoadDatabaseObjects("sprocs\\");
+            if (loadDataScripts)
+                LoadDataImportScripts("data\\");
+        }
+
+        private void LoadDataImportScripts(string subdirectory)
+        {
+            var scripts = new DirectoryInfo(Path.Combine(path, subdirectory));
+            var files = scripts.GetFiles("*.sql", SearchOption.TopDirectoryOnly)
+                .Select(x => new ScriptFile(x.FullName, x.Name, ScriptType.ChangeScript)).ToList();
+            foreach (var file in files)
+            {
+                file.Load();
+                Files.Add(file.Id, file);
+            }
         }
 
         private void LoadChangeScripts() {

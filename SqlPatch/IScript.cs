@@ -10,6 +10,6 @@ namespace SqlPatch {
 
     public enum ScriptType : int {
         ChangeScript = 1,
-        DatabaseObject = 2,
+        DatabaseObject = 2
     }
 }
